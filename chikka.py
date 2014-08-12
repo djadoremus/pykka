@@ -10,6 +10,7 @@ import sys
 import json
 
 import ast
+import urllib
 
 import MySQLdb
 from sqlalchemy import *
@@ -40,6 +41,8 @@ session = Session()
 client_id="62eb59d295fa6e9dd81c636944c457956e8586147d732502767a374275ed9785"
 secret_key="e6886536ec7563e0032c7fb81835b356151190fbb6498e2ff9c8cc0811cdcf7c"
 shortcode="292902673"
+reply_message=urllib.urlencode({"message":"Message Received"})
+
 app = Flask(__name__)
 app.debug = True
 
@@ -116,21 +119,21 @@ def receiveSMS():
 		form = request.form
 		formJSON = ast.literal_eval(json.dumps(form))
 		print("---request.form ", formJSON)
-		vericode_entry = session.query(vericode_status).filter_by(vericode=formJSON['message']).first()
-		if vericode_entry!=None:
-			print("---vericode_entry " , vericode_entry)
-			session.execute("update vericode_status set mobile_number='"+formJSON['mobile_number']+"', status='SENT' where vericode='"+formJSON['message']+"'")
-			session.commit()
-			message_id=os.urandom(16).encode("hex")
-			payload = "message_type=REPLY&mobile_number="+formJSON['mobile_number']+"&shortcode="+formJSON['shortcode']+"&message_id="+os.urandom(16).encode('hex')+"&message=message+received&request_id="+formJSON['request_id']+"&request_cost=FREE&client_id="+client_id+"&secret_key="+secret_key
-			r = requests.post("https://post.chikka.com/smsapi/request", data=payload)
-			print("---calling post chikka " + r.url)
+		#vericode_entry = session.query(vericode_status).filter_by(vericode=formJSON['message']).first()
+		#if vericode_entry!=None:
+		#print("---vericode_entry " , vericode_entry)
+		session.execute("update vericode_status set mobile_number='"+formJSON['mobile_number']+"', status='SENT' where vericode='"+formJSON['message']+"'")
+		session.commit()
+		message_id=os.urandom(16).encode("hex")
+		payload = "message_type=REPLY&mobile_number="+formJSON['mobile_number']+"&shortcode="+formJSON['shortcode']+"&message_id="+os.urandom(16).encode('hex')+"&"+reply_message+"&request_id="+formJSON['request_id']+"&request_cost=FREE&client_id="+client_id+"&secret_key="+secret_key
+		r = requests.post("https://post.chikka.com/smsapi/request", data=payload)
+		print("---calling post chikka " + r.url)
 
-			try:
-				result = r.json()
-				print("---result ", result)
-			except:
-				print("---inner error ", sys.exc_info())
+		try:
+			result = r.json()
+			print("---result ", result)
+		except:
+			print("---inner error ", sys.exc_info())
 	except:
 		print("---error", sys.exc_info())
 	

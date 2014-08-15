@@ -23,11 +23,18 @@ app.debug = True
 @app.route("/pykka/send/<mobile_number>-<message>")
 def sendSMS(mobile_number, message):
 	print("---sendSMS")
-	#payload = {"message_type":"SEND", "mobile_number":"639175634463", "shortcode":"29290515151", "message_id":os.urandom(16).encode("hex"), "message":"lolwut", "client_id":"c644a80c64da54f56e29c2a3d7c4ed1d0a4a82ae9b3c4aead28d127d69334231", "secret_key":"c5695b7c3425e0fe43584f0208766674d89546f4b8239711e1e6181f99b0970d"}
-	#headers = {"Content-type":"application/json"}
-	#r = requests.post("https://post.chikka.com/smsapi/request", data=json.dumps(payload), headers=headers)
 	message_id=os.urandom(16).encode("hex")
-	payload = "message_type=SEND&mobile_number="+mobile_number+"&shortcode="+shortcode+"&message_id="+message_id+"&message="+message+"&client_id="+client_id+"&secret_key="+secret_key
+	payloadDict = {
+		"message_type":"SEND",
+		"mobile_number":mobile_number,
+		"shortcode":shortcode,
+		"message_id":message_id,
+		"message":message,
+		"client_id":client_id,
+		"secret_key":secret_key
+	}
+	#payload = "message_type=SEND&mobile_number="+mobile_number+"&shortcode="+shortcode+"&message_id="+message_id+"&message="+message+"&client_id="+client_id+"&secret_key="+secret_key
+	payload = urllib.urlencode(payloadDict)
 	r = requests.post("https://post.chikka.com/smsapi/request", data=payload)
 	print("---calling post chikka " + r.url)
 
@@ -58,7 +65,19 @@ def receiveSMS():
 		print("---request.form ", formJSON)
 
 		message_id=os.urandom(16).encode("hex")
-		payload = "message_type=REPLY&mobile_number="+formJSON['mobile_number']+"&shortcode="+formJSON['shortcode']+"&message_id="+os.urandom(16).encode('hex')+"&"+reply_message+"&request_id="+formJSON['request_id']+"&request_cost=FREE&client_id="+client_id+"&secret_key="+secret_key
+		payloadDict = {
+			"message_type":"REPLY",
+			"mobile_number":formJSON['mobile_number'],
+			"shortcode":formJSON['shortcode'],
+			"message_id":os.urandom(16).encode('hex'),
+			"message":"Message Received",
+			"request_id":formJSON['request_id'],
+			"request_cost":"FREE",
+			"client_id":client_id,
+			"secret_key":secret_key
+		}
+		payload = urllib.urlencode(payloadDict)
+		#payload = "message_type=REPLY&mobile_number="+formJSON['mobile_number']+"&shortcode="+formJSON['shortcode']+"&message_id="+os.urandom(16).encode('hex')+"&"+reply_message+"&request_id="+formJSON['request_id']+"&request_cost=FREE&client_id="+client_id+"&secret_key="+secret_key
 		r = requests.post("https://post.chikka.com/smsapi/request", data=payload)
 		print("---calling post chikka " + r.url)
 
